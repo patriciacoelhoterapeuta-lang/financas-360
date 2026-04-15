@@ -195,12 +195,33 @@
             save();
         }
 
-        function getMensalData(mesIdx) {
-            const filtrar = (arr) => arr.filter(i => (i.tipo === 'recorrente' || (i.mes === mesIdx && i.ano === currentYear)));
+       function getMensalData(mesIdx) {
+            const dataAtual = new Date();
+            const mesAtualSistema = dataAtual.getMonth(); // Abril = 3
+            const anoAtualSistema = dataAtual.getFullYear();
+
+            const filtrar = (arr) => arr.filter(i => {
+                // Se for pontual, mantém no mês/ano específico
+                if (i.tipo === 'pontual') {
+                    return i.mes === mesIdx && i.ano === currentYear;
+                }
+                // Se for recorrente:
+                if (i.tipo === 'recorrente') {
+                    // No ano atual (2026), só mostra de Abril (mês 3) em diante
+                    if (currentYear === anoAtualSistema) {
+                        return mesIdx >= mesAtualSistema; 
+                    }
+                    // Em anos futuros, mostra o ano inteiro
+                    return currentYear > anoAtualSistema;
+                }
+                return false;
+            });
             
-            // Lógica especial para parcelados
             const calcDet = (status) => state.determinadas.reduce((acc, i) => {
                 const mesFim = i.inicio + i.parc;
+                // Regra de Abril para as parcelas também
+                if (currentYear === anoAtualSistema && mesIdx < mesAtualSistema) return acc;
+                
                 if (mesIdx >= i.inicio && mesIdx < mesFim && i.ano === currentYear) {
                     return (status === 'all' || i.status === status) ? acc + (i.total / i.parc) : acc;
                 }
@@ -215,9 +236,9 @@
                 entReal: ent.filter(i => i.status === 'pago').reduce((a, b) => a + b.val, 0),
                 saiPrev: saiRec.reduce((a, b) => a + b.val, 0) + calcDet('all'),
                 saiReal: saiRec.filter(i => i.status === 'pago').reduce((a, b) => a + b.val, 0) + calcDet('pago')
-            };
-        }
-
+           };
+        } // Esta chave fecha a function getMensalData
+       
         function renderLists() {
             const renderItem = (type, i) => `
                 <li class="flex justify-between items-center p-2 rounded shadow-sm border ${i.status === 'pago' ? 'confirmed' : 'pending'}">
