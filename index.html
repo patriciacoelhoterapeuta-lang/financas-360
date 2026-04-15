@@ -3,102 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanças 360 v3 - Resgate de Dados</title>
+    <title>Finanças 360 - Versão Final Concluída</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .bg-pago { background-color: #f0fdf4; border-left: 4px solid #10b981; }
-        .bg-pendente { background-color: #ffffff; border-left: 4px solid #e2e8f0; }
+        .bg-pendente { background-color: #ffffff; border-left: 4px solid #f1f5f9; }
+        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans">
 
-    <nav class="bg-slate-800 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <nav class="bg-slate-900 text-white shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <h1 class="text-xl font-bold italic text-blue-400">FINANÇAS 360 v3</h1>
-                <select id="filtro-ano" onchange="renderAll()" class="bg-slate-700 text-white rounded px-2 py-1 font-bold outline-none">
+                <h1 class="text-xl font-black text-blue-400 italic">FINANÇAS 360°</h1>
+                <select id="filtro-ano" onchange="renderAll()" class="bg-slate-800 text-white rounded-lg px-2 py-1 font-bold outline-none border border-slate-700 cursor-pointer">
                     <option value="2025">2025</option>
                     <option value="2026" selected>2026</option>
                     <option value="2027">2027</option>
+                    <option value="2028">2028</option>
                 </select>
             </div>
-            <div class="flex gap-4 font-medium">
-                <button onclick="showTab('dashboard')" class="hover:text-blue-400 transition">Dashboard</button>
-                <button onclick="showTab('config')" class="hover:text-blue-400 transition">Lançamentos</button>
+            <div class="flex gap-6 font-bold text-sm">
+                <button onclick="showTab('dashboard')" class="hover:text-blue-400 transition uppercase tracking-tighter">Dashboard Anual</button>
+                <button onclick="showTab('config')" class="hover:text-blue-400 transition uppercase tracking-tighter">Lançamentos</button>
             </div>
         </div>
     </nav>
 
     <main class="container mx-auto px-4 py-6">
+        
         <section id="dashboard" class="tab-content active space-y-6">
-            <div id="cards-resumo" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+            <div id="cards-resumo" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left text-[11px] md:text-sm">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest">
                         <tr>
-                            <th class="px-6 py-4 border-b">Mês</th>
-                            <th class="px-6 py-4 border-b">Entradas (Renda)</th>
-                            <th class="px-6 py-4 border-b">Saídas (Despesas)</th>
-                            <th class="px-6 py-4 border-b bg-gray-50">Saldo Realizado</th>
+                            <th class="px-4 py-5 border-b">Mês de Referência</th>
+                            <th class="px-4 py-5 border-b text-green-600">Entradas</th>
+                            <th class="px-4 py-5 border-b text-red-600">Fixo</th>
+                            <th class="px-4 py-5 border-b text-orange-600">Variável</th>
+                            <th class="px-4 py-5 border-b text-purple-600">Dívida</th>
+                            <th class="px-4 py-5 border-b bg-slate-100 font-bold">Saldo Real</th>
                         </tr>
                     </thead>
-                    <tbody id="dashboard-body" class="divide-y divide-gray-100"></tbody>
+                    <tbody id="dashboard-body" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
+            <p class="text-[10px] text-slate-400 text-center italic">* Clique nos valores de cada coluna para abrir a lista e dar baixa individual no mês.</p>
         </section>
 
         <section id="config" class="tab-content space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-blue-600 mb-6 uppercase text-xs">📥 Nova Renda</h2>
-                    <div class="space-y-3 p-4 bg-blue-50 rounded-xl mb-6">
-                        <input type="text" id="ent-desc" placeholder="Nome" class="w-full border p-2 rounded">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-blue-600 mb-4 text-xs uppercase tracking-widest flex items-center gap-2">📥 Entradas / Renda</h2>
+                    <div class="space-y-2 mb-4 p-4 bg-slate-50 rounded-xl border border-dashed">
+                        <input type="text" id="ent-desc" placeholder="Ex: Salário" class="w-full border p-2 rounded-lg text-sm outline-blue-400">
                         <div class="flex gap-2">
-                            <input type="number" id="ent-val" placeholder="R$" class="w-1/2 border p-2 rounded">
-                            <select id="ent-tipo" class="w-1/2 border p-2 rounded" onchange="toggleMes('ent')">
+                            <input type="number" id="ent-val" placeholder="R$" class="w-1/2 border p-2 rounded-lg text-sm outline-blue-400">
+                            <select id="ent-tipo" class="w-1/2 border p-2 rounded-lg text-sm bg-white" onchange="toggleMes('ent')">
                                 <option value="recorrente">Recorrente</option>
                                 <option value="pontual">Pontual</option>
                             </select>
                         </div>
-                        <div id="ent-mes-div" class="hidden"><select id="ent-mes" class="w-full border p-2 rounded"></select></div>
-                        <button onclick="addEntry('entradas')" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 transition">SALVAR</button>
+                        <div id="ent-mes-div" class="hidden"><select id="ent-mes" class="w-full border p-2 rounded-lg text-sm"></select></div>
+                        <button onclick="addItem('entradas')" class="w-full bg-blue-600 text-white p-2 rounded-lg font-bold text-xs uppercase hover:bg-blue-700 transition">Salvar Renda</button>
                     </div>
-                    <ul id="list-entradas" class="space-y-2"></ul>
+                    <ul id="list-entradas" class="space-y-1 max-h-40 overflow-y-auto"></ul>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-red-600 mb-6 uppercase text-xs">📤 Nova Despesa</h2>
-                    <div class="space-y-3 p-4 bg-red-50 rounded-xl mb-6">
-                        <input type="text" id="sai-desc" placeholder="Nome" class="w-full border p-2 rounded">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-red-600 mb-4 text-xs uppercase tracking-widest flex items-center gap-2">🏠 Despesas Fixas</h2>
+                    <div class="space-y-2 mb-4 p-4 bg-slate-50 rounded-xl border border-dashed text-sm">
+                        <input type="text" id="fix-desc" placeholder="Ex: Aluguel" class="w-full border p-2 rounded-lg outline-red-400">
+                        <input type="number" id="fix-val" placeholder="Valor R$" class="w-full border p-2 rounded-lg outline-red-400">
+                        <button onclick="addItem('fixas')" class="w-full bg-red-600 text-white p-2 rounded-lg font-bold text-xs uppercase hover:bg-red-700 transition">Salvar Fixa</button>
+                    </div>
+                    <ul id="list-fixas" class="space-y-1 max-h-40 overflow-y-auto"></ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-orange-600 mb-4 text-xs uppercase tracking-widest flex items-center gap-2">🛒 Despesas Variáveis</h2>
+                    <div class="space-y-2 mb-4 p-4 bg-slate-50 rounded-xl border border-dashed text-sm">
+                        <input type="text" id="var-desc" placeholder="Ex: Supermercado" class="w-full border p-2 rounded-lg outline-orange-400">
                         <div class="flex gap-2">
-                            <input type="number" id="sai-val" placeholder="R$" class="w-1/2 border p-2 rounded">
-                            <select id="sai-tipo" class="w-1/2 border p-2 rounded" onchange="toggleMes('sai')">
-                                <option value="recorrente">Recorrente</option>
+                            <input type="number" id="var-val" placeholder="R$" class="w-1/2 border p-2 rounded-lg outline-orange-400">
+                            <select id="var-tipo" class="w-1/2 border p-2 rounded-lg bg-white" onchange="toggleMes('var')">
+                                <option value="recorrente">Média Mensal</option>
                                 <option value="pontual">Pontual</option>
                             </select>
                         </div>
-                        <div id="sai-mes-div" class="hidden"><select id="sai-mes" class="w-full border p-2 rounded"></select></div>
-                        <button onclick="addEntry('despesas')" class="w-full bg-red-600 text-white p-3 rounded font-bold hover:bg-red-700 transition">SALVAR</button>
+                        <div id="var-mes-div" class="hidden"><select id="var-mes" class="w-full border p-2 rounded-lg text-sm"></select></div>
+                        <button onclick="addItem('variaveis')" class="w-full bg-orange-500 text-white p-2 rounded-lg font-bold text-xs uppercase hover:bg-orange-600 transition">Salvar Variável</button>
                     </div>
-                    <ul id="list-despesas" class="space-y-2"></ul>
+                    <ul id="list-variaveis" class="space-y-1 max-h-40 overflow-y-auto"></ul>
                 </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-purple-600 mb-4 text-xs uppercase tracking-widest flex items-center gap-2">💳 Dívidas / Parcelas</h2>
+                    <div class="space-y-2 mb-4 p-4 bg-slate-50 rounded-xl border border-dashed text-sm">
+                        <input type="text" id="det-desc" placeholder="Ex: Notebook" class="w-full border p-2 rounded-lg outline-purple-400">
+                        <div class="flex gap-2">
+                            <input type="number" id="det-total" placeholder="Total R$" class="w-1/3 border p-2 rounded-lg outline-purple-400">
+                            <input type="number" id="det-parc" placeholder="Parc." class="w-1/4 border p-2 rounded-lg outline-purple-400">
+                            <select id="det-inicio" class="w-1/3 border p-2 rounded-lg bg-white"></select>
+                        </div>
+                        <button onclick="addParcelada()" class="w-full bg-purple-600 text-white p-2 rounded-lg font-bold text-xs uppercase hover:bg-purple-700 transition">Salvar Parcelamento</button>
+                    </div>
+                    <ul id="list-determinadas" class="space-y-1 max-h-40 overflow-y-auto"></ul>
+                </div>
+
             </div>
+            <div class="text-center pt-8 border-t"><button onclick="resetData()" class="text-slate-300 text-[10px] font-bold uppercase hover:text-red-500 transition tracking-widest">Apagar Todos os Dados</button></div>
         </section>
     </main>
 
-    <div id="modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z- p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border">
-            <div id="modal-header" class="p-6 text-white font-bold flex justify-between items-center">
-                <span id="modal-title">Detalhes</span>
-                <button onclick="closeModal()">✕</button>
+    <div id="modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z- p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-white/20 animate-in fade-in zoom-in duration-200">
+            <div id="modal-header" class="p-6 text-white font-bold flex justify-between items-center shadow-lg">
+                <span id="modal-title" class="uppercase tracking-tighter">Detalhes</span>
+                <button onclick="closeModal()" class="text-xl">✕</button>
             </div>
             <div id="modal-body" class="p-6 max-h-[50vh] overflow-y-auto space-y-3 bg-slate-50"></div>
-            <div class="p-4 bg-white border-t flex justify-between items-center">
-                <span id="modal-footer-sum" class="font-bold text-sm"></span>
-                <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs">OK</button>
+            <div class="p-6 bg-white border-t flex justify-between items-center">
+                <span id="modal-footer-sum" class="font-black text-slate-800 text-sm italic"></span>
+                <button onclick="closeModal()" class="px-8 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition">Fechar</button>
             </div>
         </div>
     </div>
@@ -106,164 +140,198 @@
     <script>
         const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         
-        // RESGATE DE DADOS: O código agora lê TODAS as chaves antigas
-        let storageV2 = JSON.parse(localStorage.getItem('financas_pro_360_v2')) || {};
-        let storageV3 = JSON.parse(localStorage.getItem('financas_pro_360_v3')) || {};
-
-        let state = {
-            entradas: storageV3.entradas || storageV2.entradas || [],
-            despesas: storageV3.despesas || [
-                ...(storageV2.fixas || []),
-                ...(storageV2.variaveis || []),
-                ...(storageV2.determinadas || [])
-            ],
-            pagas: storageV3.pagas || {}
+        // Dados mestre (vFinal para não conflitar)
+        let state = JSON.parse(localStorage.getItem('f360_final_v5')) || {
+            entradas: [], fixas: [], variaveis: [], determinadas: [], pagas: {}
         };
 
-        // Migração para garantir que o formato 'despesas' seja respeitado
-        state.despesas = state.despesas.map(i => {
-            if (i.total && i.parc) return { ...i, val: i.total / i.parc, tipo: 'determinada' };
-            if (!i.tipo) return { ...i, tipo: 'recorrente' };
-            return i;
-        });
-
-        document.querySelectorAll('#ent-mes, #sai-mes').forEach(s => {
+        // Popular campos de meses
+        document.querySelectorAll('#ent-mes, #var-mes, #det-inicio').forEach(s => {
             meses.forEach((m, i) => s.innerHTML += `<option value="${i}">${m}</option>`);
         });
 
-        function toggleMes(prefix) {
-            const val = document.getElementById(`${prefix}-tipo`).value;
-            document.getElementById(`${prefix}-mes-div`).style.display = (val === 'pontual') ? 'block' : 'none';
+        function toggleMes(p) { document.getElementById(`${p}-mes-div`).style.display = (document.getElementById(`${p}-tipo`).value === 'pontual') ? 'block' : 'none'; }
+        
+        function save() { 
+            localStorage.setItem('f360_final_v5', JSON.stringify(state)); 
+            renderAll(); 
         }
 
-        function save() {
-            localStorage.setItem('financas_pro_360_v3', JSON.stringify(state));
-            renderAll();
-        }
-
-        function addEntry(type) {
-            const prefix = type === 'entradas' ? 'ent' : 'sai';
+        // --- LANÇAMENTOS ---
+        function addItem(type) {
+            const prefix = type === 'entradas' ? 'ent' : type === 'variaveis' ? 'var' : 'fix';
             const desc = document.getElementById(`${prefix}-desc`).value;
             const val = parseFloat(document.getElementById(`${prefix}-val`).value);
-            const tipo = document.getElementById(`${prefix}-tipo`).value;
-            const mesSel = parseInt(document.getElementById(`${prefix}-mes`).value);
+            const tipo = document.getElementById(`${prefix}-tipo`)?.value || 'recorrente';
+            const mes = parseInt(document.getElementById(`${prefix}-mes`)?.value || 0);
             const ano = parseInt(document.getElementById('filtro-ano').value);
 
             if(desc && val) {
-                state[type === 'entradas' ? 'entradas' : 'despesas'].push({
-                    id: 'ID' + Date.now(), desc, val, tipo,
-                    mesCriacao: tipo === 'recorrente' ? -1 : mesSel,
-                    anoCriacao: ano
+                state[type].push({ 
+                    id: 'ID' + Date.now(), 
+                    desc, val, tipo, mes: tipo === 'recorrente' ? -1 : mes, ano 
                 });
                 save();
-                document.getElementById(`${prefix}-desc`).value = '';
+                document.getElementById(`${prefix}-desc`).value = ''; 
                 document.getElementById(`${prefix}-val`).value = '';
             }
         }
 
+        function addParcelada() {
+            const desc = document.getElementById('det-desc').value;
+            const total = parseFloat(document.getElementById('det-total').value);
+            const parc = parseInt(document.getElementById('det-parc').value);
+            const inicio = parseInt(document.getElementById('det-inicio').value);
+            const ano = parseInt(document.getElementById('filtro-ano').value);
+
+            if(desc && total && parc) {
+                state.determinadas.push({ 
+                    id: 'ID' + Date.now(), 
+                    desc, val: total/parc, total, parc, inicio, ano 
+                });
+                save();
+                document.getElementById('det-desc').value = ''; 
+                document.getElementById('det-total').value = '';
+                document.getElementById('det-parc').value = '';
+            }
+        }
+
         function removeItem(type, id) {
-            if(confirm("Excluir item?")) {
+            if(confirm("Excluir definitivamente?")) {
                 state[type] = state[type].filter(i => i.id !== id);
                 save();
             }
         }
 
+        // --- BAIXA E MOTOR DE CÁLCULO ---
         function toggleBaixa(id, mesIdx, ano) {
             const key = `${id}_${mesIdx}_${ano}`;
             state.pagas[key] = !state.pagas[key];
             save();
-            openModal(mesIdx, window.currentModalType);
+            openModal(mesIdx, window.currentCategory);
         }
 
-        function getValoresMes(mesIdx, ano) {
-            const filtrar = (list) => list.filter(i => {
-                if (i.tipo === 'pontual') return i.mesCriacao === mesIdx && i.anoCriacao === ano;
-                if (i.tipo === 'determinada') {
+        function getDadosMes(mesIdx, ano) {
+            const motor = (lista) => lista.filter(i => {
+                if(i.total) { // Lógica Parcelada
                     const mesFim = i.inicio + i.parc;
                     return mesIdx >= i.inicio && mesIdx < mesFim && i.ano === ano;
                 }
-                // Regra Abril/2026
-                if (ano === 2026) return mesIdx >= 3;
+                if(i.tipo === 'pontual') return i.mes === mesIdx && i.ano === ano;
+                // Regra de Abril/2026 para Recorrentes
+                if(ano === 2026) return mesIdx >= 3; 
                 return ano > 2026;
-            });
-
-            const calc = (lista) => lista.reduce((acc, i) => {
-                const valor = i.val || (i.total / i.parc);
+            }).reduce((acc, i) => {
+                const valor = i.val;
                 acc.prev += valor;
-                if (state.pagas[`${i.id}_${mesIdx}_${ano}`]) acc.real += valor;
+                if(state.pagas[`${i.id}_${mesIdx}_${ano}`]) acc.real += valor;
+                acc.items.push(i);
                 return acc;
-            }, { prev: 0, real: 0, items: lista });
+            }, { prev: 0, real: 0, items: [] });
 
             return {
-                entradas: calc(filtrar(state.entradas)),
-                saidas: calc(filtrar(state.despesas))
+                entradas: motor(state.entradas),
+                fixas: motor(state.fixas),
+                variaveis: motor(state.variaveis),
+                determinadas: motor(state.determinadas)
             };
         }
 
+        // --- INTERFACE DASHBOARD ---
         function renderDashboard() {
             const ano = parseInt(document.getElementById('filtro-ano').value);
             const tbody = document.getElementById('dashboard-body');
             tbody.innerHTML = '';
-            let tEnt = 0, tSai = 0;
+            let tEntReal = 0, tSaiReal = 0;
 
             meses.forEach((mes, i) => {
-                const d = getValoresMes(i, ano);
-                const saldo = d.entradas.real - d.saidas.real;
-                tEnt += d.entradas.real; tSai += d.saidas.real;
+                const d = getDadosMes(i, ano);
+                const saidaRealMes = d.fixas.real + d.variaveis.real + d.determinadas.real;
+                const saldo = d.entradas.real - saidaRealMes;
+                tEntReal += d.entradas.real; tSaiReal += saidaRealMes;
 
                 tbody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 font-bold">${mes}</td>
-                        <td class="px-6 py-4 cursor-pointer hover:bg-green-50" onclick="openModal(${i}, 'entradas')">
-                            <div class="text-[10px] text-gray-400 italic">Prev: R$ ${d.entradas.prev.toFixed(2)}</div>
-                            <div class="text-green-600 font-bold underline underline-offset-4 decoration-dotted">Real: R$ ${d.entradas.real.toFixed(2)}</div>
+                    <tr class="hover:bg-slate-50 transition border-l-4 ${saldo < 0 ? 'border-red-500' : 'border-blue-500'}">
+                        <td class="px-4 py-4 font-black text-slate-700">${mes}</td>
+                        <td class="px-4 py-4 cursor-pointer hover:bg-green-50" onclick="openModal(${i}, 'entradas')">
+                            <div class="text-[9px] text-gray-400 font-bold uppercase">Prev: R$ ${d.entradas.prev.toFixed(2)}</div>
+                            <div class="text-green-600 font-bold italic">Real: R$ ${d.entradas.real.toFixed(2)}</div>
                         </td>
-                        <td class="px-6 py-4 cursor-pointer hover:bg-red-50" onclick="openModal(${i}, 'saidas')">
-                            <div class="text-[10px] text-gray-400 italic">Prev: R$ ${d.saidas.prev.toFixed(2)}</div>
-                            <div class="text-red-600 font-bold underline underline-offset-4 decoration-dotted">Real: R$ ${d.saidas.real.toFixed(2)}</div>
+                        <td class="px-4 py-4 cursor-pointer hover:bg-red-50" onclick="openModal(${i}, 'fixas')">
+                            <div class="text-[9px] text-gray-400 font-bold uppercase">Prev: R$ ${d.fixas.prev.toFixed(2)}</div>
+                            <div class="text-red-600 font-bold italic text-xs">Real: R$ ${d.fixas.real.toFixed(2)}</div>
                         </td>
-                        <td class="px-6 py-4 font-black text-lg ${saldo < 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldo.toFixed(2)}</td>
+                        <td class="px-4 py-4 cursor-pointer hover:bg-orange-50" onclick="openModal(${i}, 'variaveis')">
+                            <div class="text-[9px] text-gray-400 font-bold uppercase">Prev: R$ ${d.variaveis.prev.toFixed(2)}</div>
+                            <div class="text-orange-600 font-bold italic text-xs">Real: R$ ${d.variaveis.real.toFixed(2)}</div>
+                        </td>
+                        <td class="px-4 py-4 cursor-pointer hover:bg-purple-50" onclick="openModal(${i}, 'determinadas')">
+                            <div class="text-[9px] text-gray-400 font-bold uppercase">Prev: R$ ${d.determinadas.prev.toFixed(2)}</div>
+                            <div class="text-purple-600 font-bold italic text-xs">Real: R$ ${d.determinadas.real.toFixed(2)}</div>
+                        </td>
+                        <td class="px-4 py-4 font-black bg-slate-50/50 text-center ${saldo < 0 ? 'text-red-600' : 'text-blue-600'} text-lg">
+                            R$ ${saldo.toFixed(2)}
+                        </td>
                     </tr>`;
             });
+
             document.getElementById('cards-resumo').innerHTML = `
-                <div class="bg-blue-600 text-white p-6 rounded-xl shadow-lg"><p class="text-[10px] uppercase opacity-70">Saldo Realizado</p><p class="text-2xl font-black">R$ ${(tEnt-tSai).toFixed(2)}</p></div>
-                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-[10px] text-gray-400 uppercase font-bold">Total Recebido</p><p class="text-2xl font-bold text-green-600">R$ ${tEnt.toFixed(2)}</p></div>
-                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-[10px] text-gray-400 uppercase font-bold">Total Pago</p><p class="text-2xl font-bold text-red-600">R$ ${tSai.toFixed(2)}</p></div>`;
+                <div class="bg-blue-600 text-white p-8 rounded-3xl shadow-xl shadow-blue-100">
+                    <p class="text-[10px] uppercase font-bold tracking-widest opacity-70">Saldo Realizado Anual</p>
+                    <p class="text-3xl font-black italic">R$ ${(tEntReal - tSaiReal).toFixed(2)}</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold">Total Recebido (✅)</p>
+                    <p class="text-2xl font-bold text-green-600">R$ ${tEntReal.toFixed(2)}</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold">Total Pago (✅)</p>
+                    <p class="text-2xl font-bold text-red-600">R$ ${tSaiReal.toFixed(2)}</p>
+                </div>`;
         }
 
-        function openModal(mesIdx, type) {
-            window.currentModalType = type;
+        // --- MODAL ---
+        function openModal(mesIdx, cat) {
+            window.currentCategory = cat;
             const ano = parseInt(document.getElementById('filtro-ano').value);
             const modal = document.getElementById('modal');
-            const body = document.getElementById('modal-body');
-            const data = getValoresMes(mesIdx, ano)[type === 'entradas' ? 'entradas' : 'saidas'];
+            const data = getDadosMes(mesIdx, ano)[cat];
             
             modal.classList.remove('hidden');
-            document.getElementById('modal-header').className = `p-6 text-white font-bold flex justify-between ${type === 'entradas' ? 'bg-green-600' : 'bg-red-600'}`;
-            document.getElementById('modal-title').innerText = `${type === 'entradas' ? 'Receitas' : 'Despesas'} - ${meses[mesIdx]}`;
-            document.getElementById('modal-footer-sum').innerText = `Total: R$ ${data.real.toFixed(2)}`;
+            const cores = { entradas: 'bg-green-600', fixas: 'bg-red-600', variaveis: 'bg-orange-500', determinadas: 'bg-purple-600' };
+            document.getElementById('modal-header').className = `p-6 text-white font-bold flex justify-between items-center shadow-lg ${cores[cat]}`;
+            document.getElementById('modal-title').innerText = `${cat.toUpperCase()} - ${meses[mesIdx]}`;
+            document.getElementById('modal-footer-sum').innerText = `Realizado: R$ ${data.real.toFixed(2)}`;
 
-            body.innerHTML = data.items.map(i => {
+            document.getElementById('modal-body').innerHTML = data.items.map(i => {
                 const isP = state.pagas[`${i.id}_${mesIdx}_${ano}`];
-                return `<div class="flex justify-between items-center p-4 rounded-xl border ${isP ? 'bg-pago' : 'bg-pendente'}">
-                    <div><p class="font-bold text-xs uppercase">${i.desc}</p></div>
-                    <div class="flex items-center gap-4"><span class="font-bold text-sm">R$ ${(i.val || i.total/i.parc).toFixed(2)}</span>
-                    <button onclick="toggleBaixa('${i.id}', ${mesIdx}, ${ano})" class="text-2xl">${isP ? '✅' : '⬜'}</button></div>
+                return `<div class="flex justify-between items-center p-4 rounded-2xl border ${isP ? 'bg-pago' : 'bg-pendente'} shadow-sm">
+                    <div>
+                        <p class="font-black text-[11px] uppercase text-slate-700 leading-none">${i.desc}</p>
+                        <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">${i.tipo || 'Parcela'}</p>
+                    </div>
+                    <div class="flex items-center gap-6"><span class="font-black text-slate-800 text-sm italic">R$ ${i.val.toFixed(2)}</span>
+                    <button onclick="toggleBaixa('${i.id}', ${mesIdx}, ${ano})" class="text-3xl focus:outline-none hover:scale-110 transition">${isP ? '✅' : '⬜'}</button></div>
                 </div>`;
-            }).join('') || '<p class="text-center text-gray-400 py-4 italic">Nenhum lançamento.</p>';
+            }).join('') || '<p class="text-center py-10 text-slate-400 font-medium italic">Nenhum lançamento.</p>';
         }
 
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); renderAll(); }
+        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'dashboard') renderDashboard(); }
+        
         function renderLists() {
             const ano = parseInt(document.getElementById('filtro-ano').value);
-            const r = (type) => {
-                document.getElementById(`list-${type === 'entradas' ? 'entradas' : 'despesas'}`).innerHTML = state[type === 'entradas' ? 'entradas' : 'despesas']
-                    .filter(i => i.anoCriacao === ano || i.tipo === 'recorrente' || i.ano === ano)
-                    .map(i => `<li class="flex justify-between items-center bg-white p-2 border rounded text-xs"><span>${i.desc}</span><button onclick="removeItem('${type === 'entradas' ? 'entradas' : 'despesas'}', '${i.id}')" class="text-red-400 font-bold px-2">×</button></li>`).join('');
+            const r = (cat, el) => {
+                document.getElementById(el).innerHTML = state[cat].filter(i => i.ano === ano || i.tipo === 'recorrente' || !i.tipo)
+                .map(i => `<li class="flex justify-between items-center bg-white p-2 border border-slate-100 rounded-lg text-[11px] font-bold shadow-sm group">
+                    <span>${i.desc} (R$ ${i.val.toFixed(2)})</span>
+                    <button onclick="removeItem('${cat}', '${i.id}')" class="text-red-400 px-2 font-black opacity-0 group-hover:opacity-100 transition text-lg">×</button>
+                </li>`).join('');
             };
-            r('entradas'); r('despesas');
+            r('entradas', 'list-entradas'); r('fixas', 'list-fixas'); r('variaveis', 'list-variaveis'); r('determinadas', 'list-determinadas');
         }
+
+        function resetData() { if(confirm("CUIDADO: Isso apagará TUDO definitivamente.")) { localStorage.removeItem('f360_final_v5'); location.reload(); } }
         function renderAll() { renderLists(); renderDashboard(); }
         renderAll();
     </script>
