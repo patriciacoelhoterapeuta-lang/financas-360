@@ -3,185 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador Financeiro Anual</title>
+    <title>Finanças Pro - Realizado vs Previsto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+        .confirmed { border-left: 4px solid #10b981 !important; }
+        .pending { border-left: 4px solid #f59e0b !important; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
-    <nav class="bg-indigo-700 text-white shadow-xl sticky top-0 z-50">
+    <nav class="bg-slate-800 text-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">💰</span>
-                <h1 class="text-xl font-bold tracking-tight">Finanças 360°</h1>
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold italic text-blue-400">FINANÇAS 360 v2</h1>
+                <select id="filtro-ano" onchange="changeYear()" class="bg-slate-700 text-white rounded px-2 py-1 border-none outline-none font-bold text-lg">
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                </select>
             </div>
-            <div class="flex gap-4 text-sm font-medium">
-                <button onclick="showTab('dashboard')" class="hover:text-indigo-200 transition">Dashboard</button>
-                <button onclick="showTab('config')" class="hover:text-indigo-200 transition">Configurações</button>
-                <button onclick="exportToExcel()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition shadow-md">Exportar Excel</button>
+            <div class="flex gap-4">
+                <button onclick="showTab('dashboard')" class="hover:text-blue-400 font-medium">Dashboard</button>
+                <button onclick="showTab('config')" class="hover:text-blue-400 font-medium">Lançamentos</button>
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm transition">Excel</button>
             </div>
         </div>
     </nav>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-6">
         
-        <section id="dashboard" class="tab-content active space-y-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4" id="cards-resumo">
-                </div>
+        <section id="dashboard" class="tab-content active space-y-6">
+            <div id="cards-resumo" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-lg shadow overflow-hidden border">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
                             <tr>
-                                <th class="px-4 py-3 border-b">Mês</th>
-                                <th class="px-4 py-3 border-b text-green-600">Entradas</th>
-                                <th class="px-4 py-3 border-b text-red-600">Fixas</th>
-                                <th class="px-4 py-3 border-b text-orange-600">Variáveis*</th>
-                                <th class="px-4 py-3 border-b text-purple-600">Dívidas</th>
-                                <th class="px-4 py-3 border-b text-blue-600">Parceladas</th>
-                                <th class="px-4 py-3 border-b bg-gray-200 font-bold">Saldo</th>
+                                <th class="px-4 py-3 border-b text-left">Mês</th>
+                                <th class="px-4 py-3 border-b">Previsto Entrada</th>
+                                <th class="px-4 py-3 border-b">Realizado Entrada</th>
+                                <th class="px-4 py-3 border-b">Previsto Saída</th>
+                                <th class="px-4 py-3 border-b">Realizado Saída</th>
+                                <th class="px-4 py-3 border-b bg-gray-100">Saldo Final</th>
                             </tr>
                         </thead>
-                        <tbody id="dashboard-body" class="divide-y divide-gray-100">
-                            </tbody>
+                        <tbody id="dashboard-body" class="divide-y"></tbody>
                     </table>
                 </div>
-                <div class="p-4 bg-gray-50 text-xs text-gray-500 italic">
-                    * Você pode editar as variáveis extras diretamente na tabela para cada mês.
-                </div>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-gray-500 font-bold mb-4 uppercase text-xs">Evolução do Saldo Anual</h3>
-                    <canvas id="chartEvolucao" height="150"></canvas>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-gray-500 font-bold mb-4 uppercase text-xs">Composição Média de Gastos</h3>
-                    <canvas id="chartPizza" height="150"></canvas>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-4 rounded-lg shadow border"><canvas id="chartEvolucao"></canvas></div>
+                <div class="bg-white p-4 rounded-lg shadow border"><canvas id="chartPrevVsReal"></canvas></div>
             </div>
         </section>
 
         <section id="config" class="tab-content space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-lg mb-4 text-green-700">A. Fontes de Renda (Mensal)</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="in-desc" placeholder="Ex: Salário" class="flex-1 border rounded-lg px-3 py-2">
-                        <input type="number" id="in-valor" placeholder="R$" class="w-24 border rounded-lg px-3 py-2">
-                        <button onclick="addItem('entradas')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">+</button>
+                <div class="bg-white p-5 rounded-xl shadow border">
+                    <h2 class="font-bold text-blue-600 mb-4 flex justify-between items-center">
+                        ENTRADAS (Renda)
+                        <span class="text-[10px] text-gray-400">PONTUAL OU RECORRENTE</span>
+                    </h2>
+                    <div class="grid gap-2 mb-4 p-3 bg-gray-50 rounded-lg border border-dashed">
+                        <input type="text" id="ent-desc" placeholder="Ex: Salário, Freela" class="border p-2 rounded w-full">
+                        <div class="flex gap-2">
+                            <input type="number" id="ent-val" placeholder="R$" class="w-1/2 border p-2 rounded">
+                            <select id="ent-tipo" class="w-1/2 border p-2 rounded">
+                                <option value="recorrente">Recorrente Mensal</option>
+                                <option value="pontual">Pontual</option>
+                            </select>
+                        </div>
+                        <div id="ent-extra" class="hidden flex gap-2">
+                            <select id="ent-mes" class="w-full border p-2 rounded"></select>
+                        </div>
+                        <button onclick="addEntry('entradas')" class="bg-blue-600 text-white p-2 rounded font-bold">+ ADICIONAR ENTRADA</button>
                     </div>
                     <ul id="list-entradas" class="space-y-2"></ul>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-lg mb-4 text-red-700">B. Despesas Fixas (Todo mês)</h2>
+                <div class="bg-white p-5 rounded-xl shadow border">
+                    <h2 class="font-bold text-orange-600 mb-4 flex justify-between items-center">
+                        SAÍDAS VARIÁVEIS
+                        <span class="text-[10px] text-gray-400">GASTOS DO MÊS</span>
+                    </h2>
+                    <div class="grid gap-2 mb-4 p-3 bg-gray-50 rounded-lg border border-dashed">
+                        <input type="text" id="var-desc" placeholder="Ex: Supermercado, Viagem" class="border p-2 rounded w-full">
+                        <div class="flex gap-2">
+                            <input type="number" id="var-val" placeholder="R$" class="w-1/2 border p-2 rounded">
+                            <select id="var-tipo" class="w-1/2 border p-2 rounded">
+                                <option value="recorrente">Média Mensal</option>
+                                <option value="pontual">Pontual</option>
+                            </select>
+                        </div>
+                        <div id="var-extra" class="hidden flex gap-2">
+                            <select id="var-mes" class="w-full border p-2 rounded"></select>
+                        </div>
+                        <button onclick="addEntry('variaveis')" class="bg-orange-500 text-white p-2 rounded font-bold">+ ADICIONAR VARIÁVEL</button>
+                    </div>
+                    <ul id="list-variaveis" class="space-y-2"></ul>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow border">
+                    <h2 class="font-bold text-red-600 mb-4">DESPESAS FIXAS (Mensais)</h2>
                     <div class="flex gap-2 mb-4">
-                        <input type="text" id="fix-desc" placeholder="Ex: Aluguel" class="flex-1 border rounded-lg px-3 py-2">
-                        <input type="number" id="fix-valor" placeholder="R$" class="w-24 border rounded-lg px-3 py-2">
-                        <button onclick="addItem('fixas')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">+</button>
+                        <input type="text" id="fix-desc" placeholder="Aluguel, Luz..." class="flex-1 border p-2 rounded">
+                        <input type="number" id="fix-val" placeholder="R$" class="w-24 border p-2 rounded">
+                        <button onclick="addEntry('fixas')" class="bg-red-500 text-white px-4 rounded">+</button>
                     </div>
                     <ul id="list-fixas" class="space-y-2"></ul>
                 </div>
-
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-lg mb-4 text-purple-700">C. Dívidas (Com fim)</h2>
-                    <div class="space-y-2 mb-4">
-                        <input type="text" id="div-desc" placeholder="Nome da Dívida" class="w-full border rounded-lg px-3 py-2 text-sm">
-                        <div class="flex gap-2">
-                            <input type="number" id="div-valor" placeholder="Total R$" class="flex-1 border rounded-lg px-3 py-2 text-sm">
-                            <input type="number" id="div-parc" placeholder="Parc." class="w-20 border rounded-lg px-3 py-2 text-sm">
-                            <select id="div-inicio" class="w-28 border rounded-lg px-3 py-2 text-sm"></select>
-                        </div>
-                        <button onclick="addTerminavel('dividas')" class="w-full bg-purple-600 text-white py-2 rounded-lg font-bold uppercase text-xs">Adicionar Dívida</button>
-                    </div>
-                    <ul id="list-dividas" class="space-y-2 text-sm"></ul>
+                
+                <div class="bg-white p-5 rounded-xl shadow border opacity-50 pointer-events-none italic">
+                    <h2 class="font-bold text-purple-600 mb-4">DÍVIDAS E PARCELADAS</h2>
+                    (As dívidas do arquivo anterior permanecem integradas no cálculo automático)
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <h2 class="font-bold text-lg mb-4 text-blue-700">D. Compras Parceladas</h2>
-                    <div class="space-y-2 mb-4">
-                        <input type="text" id="par-desc" placeholder="Ex: Notebook" class="w-full border rounded-lg px-3 py-2 text-sm">
-                        <div class="flex gap-2">
-                            <input type="number" id="par-valor" placeholder="Total R$" class="flex-1 border rounded-lg px-3 py-2 text-sm">
-                            <input type="number" id="par-parc" placeholder="Parc." class="w-20 border rounded-lg px-3 py-2 text-sm">
-                            <select id="par-inicio" class="w-28 border rounded-lg px-3 py-2 text-sm"></select>
-                        </div>
-                        <button onclick="addTerminavel('parceladas')" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold uppercase text-xs">Adicionar Parcela</button>
-                    </div>
-                    <ul id="list-parceladas" class="space-y-2 text-sm"></ul>
-                </div>
-
-            </div>
-            <div class="text-center p-4 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                <button onclick="resetData()" class="text-red-500 text-xs font-bold uppercase hover:underline">Limpar Todos os Dados</button>
             </div>
         </section>
     </main>
 
     <script>
-        // --- CONFIGURAÇÃO INICIAL E ESTADO ---
+        // --- ESTADO INICIAL ---
         const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        let currentYear = 2026;
         
-        let state = JSON.parse(localStorage.getItem('finances360')) || {
-            entradas: [],
+        let state = JSON.parse(localStorage.getItem('financas_pro_v2')) || {
+            entradas: [], // {id, desc, val, tipo, mes, ano, status: 'previsto'|'pago'}
             fixas: [],
+            variaveis: [],
             dividas: [],
-            parceladas: [],
-            variaveisExtras: Array(12).fill(0),
-            variaveisRecorrentes: 0 // Simplificado para soma única
+            parceladas: []
         };
 
         // Popular selects de meses
-        const selects = ['div-inicio', 'par-inicio'];
-        selects.forEach(s => {
-            const el = document.getElementById(s);
-            meses.forEach((m, i) => el.innerHTML += `<option value="${i}">${m}</option>`);
+        document.querySelectorAll('#ent-mes, #var-mes').forEach(s => {
+            meses.forEach((m, i) => s.innerHTML += `<option value="${i}">${m}</option>`);
         });
 
-        // --- NAVEGAÇÃO ---
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'dashboard') renderDashboard();
-        }
+        // Toggle campos extras baseados no tipo (Pontual/Recorrente)
+        document.getElementById('ent-tipo').addEventListener('change', e => document.getElementById('ent-extra').style.display = e.target.value === 'pontual' ? 'flex' : 'none');
+        document.getElementById('var-tipo').addEventListener('change', e => document.getElementById('var-extra').style.display = e.target.value === 'pontual' ? 'flex' : 'none');
 
-        // --- LÓGICA DE DADOS ---
+        // --- FUNÇÕES CORE ---
         function save() {
-            localStorage.setItem('finances360', JSON.stringify(state));
-            renderLists();
-            renderDashboard();
+            localStorage.setItem('financas_pro_v2', JSON.stringify(state));
+            renderAll();
         }
 
-        function addItem(type) {
-            const desc = document.getElementById(type === 'entradas' ? 'in-desc' : 'fix-desc').value;
-            const val = parseFloat(document.getElementById(type === 'entradas' ? 'in-valor' : 'fix-valor').value);
-            if(desc && val) {
-                state[type].push({ id: Date.now(), desc, val });
-                save();
-            }
-        }
-
-        function addTerminavel(type) {
-            const prefix = type === 'dividas' ? 'div' : 'par';
+        function addEntry(type) {
+            const prefix = type === 'entradas' ? 'ent' : type === 'variaveis' ? 'var' : 'fix';
             const desc = document.getElementById(`${prefix}-desc`).value;
-            const total = parseFloat(document.getElementById(`${prefix}-valor`).value);
-            const parc = parseInt(document.getElementById(`${prefix}-parc`).value);
-            const inicio = parseInt(document.getElementById(`${prefix}-inicio`).value);
+            const val = parseFloat(document.getElementById(`${prefix}-val`).value);
+            const tipo = document.getElementById(`${prefix}-tipo`)?.value || 'recorrente';
+            const mes = parseInt(document.getElementById(`${prefix}-mes`)?.value || 0);
 
-            if(desc && total && parc) {
-                state[type].push({ id: Date.now(), desc, total, parc, inicio });
+            if(desc && val) {
+                state[type].push({
+                    id: Date.now(),
+                    desc,
+                    val,
+                    tipo,
+                    mes: tipo === 'recorrente' ? -1 : mes,
+                    ano: currentYear,
+                    status: 'previsto'
+                });
                 save();
+                document.getElementById(`${prefix}-desc`).value = '';
+                document.getElementById(`${prefix}-val`).value = '';
             }
+        }
+
+        function toggleStatus(type, id) {
+            const item = state[type].find(i => i.id === id);
+            item.status = item.status === 'previsto' ? 'pago' : 'previsto';
+            save();
         }
 
         function removeItem(type, id) {
@@ -189,180 +190,144 @@
             save();
         }
 
-        function resetData() {
-            if(confirm("Tem certeza que deseja apagar tudo?")) {
-                localStorage.removeItem('finances360');
-                location.reload();
-            }
+        function changeYear() {
+            currentYear = parseInt(document.getElementById('filtro-ano').value);
+            renderAll();
         }
 
-        // --- CÁLCULOS ---
-        function getValorMes(type, mesIndex) {
-            return state[type].reduce((acc, item) => {
-                const mesFim = item.inicio + item.parc;
-                if(mesIndex >= item.inicio && mesIndex < mesFim) {
-                    return acc + (item.total / item.parc);
-                }
-                return acc;
-            }, 0);
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'dashboard') renderDashboard();
         }
 
-        function checkAlerta(type, mesIndex) {
-            return state[type].some(item => {
-                const mesFim = item.inicio + item.parc;
-                const parcelasRestantes = mesFim - mesIndex;
-                return (mesIndex >= item.inicio && mesIndex < mesFim && parcelasRestantes <= 3);
-            });
-        }
-
-        // --- RENDERIZAÇÃO ---
+        // --- RENDERIZADORES ---
         function renderLists() {
-            ['entradas', 'fixas', 'dividas', 'parceladas'].forEach(type => {
+            ['entradas', 'variaveis', 'fixas'].forEach(type => {
                 const list = document.getElementById(`list-${type}`);
-                list.innerHTML = state[type].map(i => `
-                    <li class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100">
-                        <div class="flex flex-col">
-                            <span class="font-medium">${i.desc}</span>
-                            ${i.total ? `<span class="text-[10px] text-gray-400">${i.parc}x de R$ ${(i.total/i.parc).toFixed(2)}</span>` : ''}
+                list.innerHTML = state[type]
+                    .filter(i => i.ano === currentYear || i.tipo === 'recorrente')
+                    .map(i => `
+                    <li class="flex justify-between items-center p-2 bg-white border rounded shadow-sm ${i.status === 'pago' ? 'confirmed' : 'pending'}">
+                        <div class="text-xs">
+                            <span class="font-bold uppercase">${i.desc}</span>
+                            <span class="block text-gray-400">${i.tipo === 'recorrente' ? 'Mensal' : meses[i.mes]}</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold">R$ ${(i.val || i.total/i.parc).toFixed(2)}</span>
-                            <button onclick="removeItem('${type}', ${i.id})" class="text-red-400 hover:text-red-600">×</button>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-sm">R$ ${i.val.toFixed(2)}</span>
+                            <button onclick="toggleStatus('${type}', ${i.id})" class="text-lg">${i.status === 'pago' ? '✅' : '⏳'}</button>
+                            <button onclick="removeItem('${type}', ${i.id})" class="text-red-400 px-1">×</button>
                         </div>
                     </li>
                 `).join('');
             });
         }
 
+        function getMensalData(mesIdx) {
+            const filtrar = (arr) => arr.filter(i => (i.tipo === 'recorrente' || (i.mes === mesIdx && i.ano === currentYear)));
+            
+            const ent = filtrar(state.entradas);
+            const sai = [...filtrar(state.fixas), ...filtrar(state.variaveis)];
+
+            return {
+                entPrev: ent.reduce((a, b) => a + b.val, 0),
+                entReal: ent.filter(i => i.status === 'pago').reduce((a, b) => a + b.val, 0),
+                saiPrev: sai.reduce((a, b) => a + b.val, 0),
+                saiReal: sai.filter(i => i.status === 'pago').reduce((a, b) => a + b.val, 0)
+            };
+        }
+
         function renderDashboard() {
             const tbody = document.getElementById('dashboard-body');
             tbody.innerHTML = '';
-            
-            let totaisAnuais = { entradas: 0, fixas: 0, var: 0, div: 0, par: 0, saldos: [] };
-            const fixasMes = state.fixas.reduce((acc, i) => acc + i.val, 0);
-            const entradasMes = state.entradas.reduce((acc, i) => acc + i.val, 0);
+            let totalRealizadoAno = 0;
+            let totalPrevistoAno = 0;
 
-            meses.forEach((mes, i) => {
-                const d = getValorMes('dividas', i);
-                const p = getValorMes('parceladas', i);
-                const v = state.variaveisExtras[i];
-                const alertaD = checkAlerta('dividas', i) ? '⚠️' : '';
-                const alertaP = checkAlerta('parceladas', i) ? '⚠️' : '';
+            const dadosAno = meses.map((_, idx) => getMensalData(idx));
+
+            dadosAno.forEach((d, i) => {
+                const saldo = d.entReal - d.saiReal;
+                totalRealizadoAno += saldo;
                 
-                const saldo = entradasMes - fixasMes - v - d - p;
-                totaisAnuais.saldos.push(saldo);
-
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-3 font-bold border-r bg-gray-50">${mes}</td>
-                        <td class="px-4 py-3">R$ ${entradasMes.toFixed(2)}</td>
-                        <td class="px-4 py-3 text-gray-500">R$ ${fixasMes.toFixed(2)}</td>
-                        <td class="px-4 py-3">
-                            <input type="number" value="${v}" onchange="updateVar(${i}, this.value)" 
-                                   class="w-20 bg-orange-50 border-orange-200 border rounded px-1 focus:ring-1 focus:ring-orange-400 outline-none">
-                        </td>
-                        <td class="px-4 py-3 text-purple-600">${alertaD} R$ ${d.toFixed(2)}</td>
-                        <td class="px-4 py-3 text-blue-600">${alertaP} R$ ${p.toFixed(2)}</td>
-                        <td class="px-4 py-3 font-bold ${saldo < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}">
-                            R$ ${saldo.toFixed(2)}
-                        </td>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 font-bold bg-gray-50">${meses[i]}</td>
+                        <td class="px-4 py-3 text-center text-gray-400">R$ ${d.entPrev.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-center text-green-600 font-semibold italic">R$ ${d.entReal.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-center text-gray-400">R$ ${d.saiPrev.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-center text-red-500 font-semibold italic">R$ ${d.saiReal.toFixed(2)}</td>
+                        <td class="px-4 py-3 font-bold text-center ${saldo < 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldo.toFixed(2)}</td>
                     </tr>
                 `;
             });
 
-            renderCards(entradasMes, fixasMes, totaisAnuais.saldos);
-            updateCharts(totaisAnuais.saldos);
+            document.getElementById('cards-resumo').innerHTML = `
+                <div class="bg-blue-600 text-white p-4 rounded-lg">
+                    <p class="text-xs opacity-80 uppercase">Realizado no Ano</p>
+                    <p class="text-2xl font-bold">R$ ${totalRealizadoAno.toFixed(2)}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <p class="text-xs text-gray-400 uppercase">Entrada Realizada</p>
+                    <p class="text-2xl font-bold text-green-600">R$ ${dadosAno.reduce((a,b)=>a+b.entReal,0).toFixed(2)}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border">
+                    <p class="text-xs text-gray-400 uppercase">Saída Realizada</p>
+                    <p class="text-2xl font-bold text-red-600">R$ ${dadosAno.reduce((a,b)=>a+b.saiReal,0).toFixed(2)}</p>
+                </div>
+                <div class="bg-amber-500 text-white p-4 rounded-lg">
+                    <p class="text-xs opacity-80 uppercase">Previsto Pendente</p>
+                    <p class="text-2xl font-bold">R$ ${dadosAno.reduce((a,b)=>a+(b.entPrev - b.entReal),0).toFixed(2)}</p>
+                </div>
+            `;
+            updateCharts(dadosAno);
         }
 
-        function updateVar(idx, val) {
-            state.variaveisExtras[idx] = parseFloat(val) || 0;
-            save();
-        }
-
-        function renderCards(ent, fix, saldos) {
-            const mediaSaldo = saldos.reduce((a,b)=>a+b,0) / 12;
-            const container = document.getElementById('cards-resumo');
-            const card = (t, v, c) => `
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">${t}</p>
-                    <p class="text-sm font-bold ${c}">R$ ${v.toFixed(2)}</p>
-                </div>`;
-            
-            container.innerHTML = 
-                card("Entradas/mês", ent, "text-green-600") +
-                card("Fixas/mês", fix, "text-red-600") +
-                card("Saldo Médio", mediaSaldo, mediaSaldo < 0 ? "text-red-600" : "text-green-600");
-        }
-
-        // --- GRÁFICOS ---
         let chart1, chart2;
-        function updateCharts(saldos) {
+        function updateCharts(dados) {
             const ctx1 = document.getElementById('chartEvolucao').getContext('2d');
             if(chart1) chart1.destroy();
             chart1 = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: meses,
+                    labels: meses.map(m => m.substring(0,3)),
                     datasets: [{
-                        label: 'Saldo Mensal',
-                        data: saldos,
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        fill: true,
-                        tension: 0.3
+                        label: 'Saldo Realizado',
+                        data: dados.map(d => d.entReal - d.saiReal),
+                        borderColor: '#2563eb', fill: true, backgroundColor: 'rgba(37,99,235,0.1)'
                     }]
-                },
-                options: { plugins: { legend: { display: false } } }
+                }
             });
 
-            const ctx2 = document.getElementById('chartPizza').getContext('2d');
+            const ctx2 = document.getElementById('chartPrevVsReal').getContext('2d');
             if(chart2) chart2.destroy();
-            const totalSaidas = state.fixas.reduce((a,b)=>a+b.val,0) + (state.variaveisExtras.reduce((a,b)=>a+b,0)/12);
             chart2 = new Chart(ctx2, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['Fixas', 'Variáveis', 'Dívidas', 'Parcelas'],
-                    datasets: [{
-                        data: [
-                            state.fixas.reduce((a,b)=>a+b.val,0),
-                            state.variaveisExtras.reduce((a,b)=>a+b,0)/12,
-                            state.dividas.reduce((a,b)=>a+(b.total/b.parc),0),
-                            state.parceladas.reduce((a,b)=>a+(b.total/b.parc),0)
-                        ],
-                        backgroundColor: ['#ef4444', '#f97316', '#a855f7', '#3b82f6']
-                    }]
+                    labels: ['Entradas', 'Saídas'],
+                    datasets: [
+                        { label: 'Previsto', data: [dados.reduce((a,b)=>a+b.entPrev,0), dados.reduce((a,b)=>a+b.saiPrev,0)], backgroundColor: '#cbd5e1' },
+                        { label: 'Realizado', data: [dados.reduce((a,b)=>a+b.entReal,0), dados.reduce((a,b)=>a+b.saiReal,0)], backgroundColor: '#2563eb' }
+                    ]
                 }
             });
         }
 
-        // --- EXPORTAÇÃO ---
-        function exportToExcel() {
-            const wsData = meses.map((mes, i) => {
-                const ent = state.entradas.reduce((acc, i) => acc + i.val, 0);
-                const fix = state.fixas.reduce((acc, i) => acc + i.val, 0);
-                const d = getValorMes('dividas', i);
-                const p = getValorMes('parceladas', i);
-                const v = state.variaveisExtras[i];
-                return {
-                    "Mês": mes,
-                    "Entradas": ent,
-                    "Fixas": fix,
-                    "Variáveis Extras": v,
-                    "Dívidas": d,
-                    "Parceladas": p,
-                    "Saldo Final": ent - fix - v - d - p
-                };
-            });
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, "Dashboard Anual");
-            XLSX.writeFile(wb, "Meu_Orcamento_Anual.xlsx");
+        function renderAll() {
+            renderLists();
+            renderDashboard();
         }
 
-        // Init
-        renderLists();
-        renderDashboard();
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(meses.map((m, i) => {
+                const d = getMensalData(i);
+                return { "Mês": m, "Ano": currentYear, "Entrada Real": d.entReal, "Saída Real": d.saiReal, "Saldo": d.entReal - d.saiReal };
+            }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+            XLSX.writeFile(wb, `Financeiro_${currentYear}.xlsx`);
+        }
+
+        renderAll();
     </script>
 </body>
 </html>
