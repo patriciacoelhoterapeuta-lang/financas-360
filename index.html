@@ -3,155 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanças 360 v3 - Gestão Mensal</title>
+    <title>Finanças 360 v3 - Resgate de Dados</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .pago { color: #059669 !important; font-weight: bold; }
-        .pendente { color: #94a3b8 !important; font-style: italic; }
-        .bg-pago { background-color: #f0fdf4; }
-        /* Ajuste para inputs ficarem mais limpos */
-        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+        .bg-pago { background-color: #f0fdf4; border-left: 4px solid #10b981; }
+        .bg-pendente { background-color: #ffffff; border-left: 4px solid #e2e8f0; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 font-sans">
 
     <nav class="bg-slate-800 text-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <h1 class="text-xl font-bold italic text-blue-400">FINANÇAS 360 v3</h1>
-                <select id="filtro-ano" onchange="changeYear()" class="bg-slate-700 text-white rounded px-2 py-1 font-bold outline-none border-none">
+                <select id="filtro-ano" onchange="renderAll()" class="bg-slate-700 text-white rounded px-2 py-1 font-bold outline-none">
                     <option value="2025">2025</option>
                     <option value="2026" selected>2026</option>
                     <option value="2027">2027</option>
-                    <option value="2028">2028</option>
                 </select>
             </div>
             <div class="flex gap-4 font-medium">
                 <button onclick="showTab('dashboard')" class="hover:text-blue-400 transition">Dashboard</button>
                 <button onclick="showTab('config')" class="hover:text-blue-400 transition">Lançamentos</button>
-                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs transition">Exportar Excel</button>
             </div>
         </div>
     </nav>
 
     <main class="container mx-auto px-4 py-6">
-        
         <section id="dashboard" class="tab-content active space-y-6">
-            <div id="cards-resumo" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                </div>
-
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 border-b">Mês de Competência</th>
-                                <th class="px-6 py-4 border-b">Entradas (Renda)</th>
-                                <th class="px-6 py-4 border-b">Saídas (Despesas)</th>
-                                <th class="px-6 py-4 border-b bg-gray-50">Saldo Realizado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashboard-body" class="divide-y divide-gray-100">
-                            </tbody>
-                    </table>
-                </div>
+            <div id="cards-resumo" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                        <tr>
+                            <th class="px-6 py-4 border-b">Mês</th>
+                            <th class="px-6 py-4 border-b">Entradas (Renda)</th>
+                            <th class="px-6 py-4 border-b">Saídas (Despesas)</th>
+                            <th class="px-6 py-4 border-b bg-gray-50">Saldo Realizado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-body" class="divide-y divide-gray-100"></tbody>
+                </table>
             </div>
-            <p class="text-[10px] text-gray-400 italic text-center">💡 Dica: Clique nos valores de "Real" para abrir a lista e dar baixa individualmente em cada conta do mês.</p>
         </section>
 
         <section id="config" class="tab-content space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h2 class="font-bold text-blue-600 mb-6 flex items-center gap-2">
-                        <span>📥</span> CONFIGURAR RENDAS (ENTRADAS)
-                    </h2>
-                    <div class="space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100 mb-6">
-                        <input type="text" id="ent-desc" placeholder="Nome da Renda (ex: Salário)" class="w-full border p-2 rounded-lg outline-blue-400">
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h2 class="font-bold text-blue-600 mb-6 uppercase text-xs">📥 Nova Renda</h2>
+                    <div class="space-y-3 p-4 bg-blue-50 rounded-xl mb-6">
+                        <input type="text" id="ent-desc" placeholder="Nome" class="w-full border p-2 rounded">
                         <div class="flex gap-2">
-                            <input type="number" id="ent-val" placeholder="Valor R$" class="w-1/2 border p-2 rounded-lg outline-blue-400">
-                            <select id="ent-tipo" class="w-1/2 border p-2 rounded-lg bg-white outline-blue-400" onchange="toggleMes('ent')">
-                                <option value="recorrente">Recorrente (Todo mês)</option>
-                                <option value="pontual">Pontual (Mês único)</option>
+                            <input type="number" id="ent-val" placeholder="R$" class="w-1/2 border p-2 rounded">
+                            <select id="ent-tipo" class="w-1/2 border p-2 rounded" onchange="toggleMes('ent')">
+                                <option value="recorrente">Recorrente</option>
+                                <option value="pontual">Pontual</option>
                             </select>
                         </div>
-                        <div id="ent-mes-div" class="hidden">
-                            <select id="ent-mes" class="w-full border p-2 rounded-lg bg-white outline-blue-400"></select>
-                        </div>
-                        <button onclick="addEntry('entradas')" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">SALVAR RENDA</button>
+                        <div id="ent-mes-div" class="hidden"><select id="ent-mes" class="w-full border p-2 rounded"></select></div>
+                        <button onclick="addEntry('entradas')" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 transition">SALVAR</button>
                     </div>
                     <ul id="list-entradas" class="space-y-2"></ul>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h2 class="font-bold text-red-600 mb-6 flex items-center gap-2">
-                        <span>📤</span> CONFIGURAR DESPESAS (SAÍDAS)
-                    </h2>
-                    <div class="space-y-3 p-4 bg-red-50/50 rounded-xl border border-red-100 mb-6">
-                        <input type="text" id="sai-desc" placeholder="Nome da Despesa (ex: Aluguel)" class="w-full border p-2 rounded-lg outline-red-400">
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h2 class="font-bold text-red-600 mb-6 uppercase text-xs">📤 Nova Despesa</h2>
+                    <div class="space-y-3 p-4 bg-red-50 rounded-xl mb-6">
+                        <input type="text" id="sai-desc" placeholder="Nome" class="w-full border p-2 rounded">
                         <div class="flex gap-2">
-                            <input type="number" id="sai-val" placeholder="Valor R$" class="w-1/2 border p-2 rounded-lg outline-red-400">
-                            <select id="sai-tipo" class="w-1/2 border p-2 rounded-lg bg-white outline-red-400" onchange="toggleMes('sai')">
-                                <option value="recorrente">Recorrente (Todo mês)</option>
-                                <option value="pontual">Pontual (Mês único)</option>
+                            <input type="number" id="sai-val" placeholder="R$" class="w-1/2 border p-2 rounded">
+                            <select id="sai-tipo" class="w-1/2 border p-2 rounded" onchange="toggleMes('sai')">
+                                <option value="recorrente">Recorrente</option>
+                                <option value="pontual">Pontual</option>
                             </select>
                         </div>
-                        <div id="sai-mes-div" class="hidden">
-                            <select id="sai-mes" class="w-full border p-2 rounded-lg bg-white outline-red-400"></select>
-                        </div>
-                        <button onclick="addEntry('despesas')" class="w-full bg-red-600 text-white p-3 rounded-lg font-bold hover:bg-red-700 transition shadow-lg shadow-red-200">SALVAR DESPESA</button>
+                        <div id="sai-mes-div" class="hidden"><select id="sai-mes" class="w-full border p-2 rounded"></select></div>
+                        <button onclick="addEntry('despesas')" class="w-full bg-red-600 text-white p-3 rounded font-bold hover:bg-red-700 transition">SALVAR</button>
                     </div>
                     <ul id="list-despesas" class="space-y-2"></ul>
                 </div>
-
-            </div>
-            
-            <div class="text-center pt-10 border-t">
-                <button onclick="resetData()" class="text-red-400 text-[10px] font-bold uppercase hover:text-red-600 transition tracking-widest">⚠️ Limpar todos os dados do sistema</button>
             </div>
         </section>
     </main>
 
     <div id="modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z- p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-white/20 animate-in fade-in zoom-in duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border">
             <div id="modal-header" class="p-6 text-white font-bold flex justify-between items-center">
-                <div class="flex flex-col">
-                    <span id="modal-title" class="text-lg">Detalhes do Mês</span>
-                    <span id="modal-subtitle" class="text-[10px] opacity-80 font-normal uppercase tracking-widest">Clique no ícone para dar baixa</span>
-                </div>
-                <button onclick="closeModal()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition">✕</button>
+                <span id="modal-title">Detalhes</span>
+                <button onclick="closeModal()">✕</button>
             </div>
-            <div id="modal-body" class="p-6 max-h-[50vh] overflow-y-auto space-y-3 bg-slate-50">
-                </div>
+            <div id="modal-body" class="p-6 max-h-[50vh] overflow-y-auto space-y-3 bg-slate-50"></div>
             <div class="p-4 bg-white border-t flex justify-between items-center">
-                <div id="modal-footer-sum" class="text-sm font-bold">Total: R$ 0,00</div>
-                <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700 transition">OK, FECHAR</button>
+                <span id="modal-footer-sum" class="font-bold text-sm"></span>
+                <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs">OK</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
         const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        let currentYear = 2026;
         
-        // Estrutura de dados: pagas armazena "id_mes_ano" : true
-        let state = JSON.parse(localStorage.getItem('financas_pro_360_v3')) || {
-            entradas: [],
-            despesas: [],
-            pagas: {}
+        // RESGATE DE DADOS: O código agora lê TODAS as chaves antigas
+        let storageV2 = JSON.parse(localStorage.getItem('financas_pro_360_v2')) || {};
+        let storageV3 = JSON.parse(localStorage.getItem('financas_pro_360_v3')) || {};
+
+        let state = {
+            entradas: storageV3.entradas || storageV2.entradas || [],
+            despesas: storageV3.despesas || [
+                ...(storageV2.fixas || []),
+                ...(storageV2.variaveis || []),
+                ...(storageV2.determinadas || [])
+            ],
+            pagas: storageV3.pagas || {}
         };
 
-        // Popular selects de meses na tela de lançamento
+        // Migração para garantir que o formato 'despesas' seja respeitado
+        state.despesas = state.despesas.map(i => {
+            if (i.total && i.parc) return { ...i, val: i.total / i.parc, tipo: 'determinada' };
+            if (!i.tipo) return { ...i, tipo: 'recorrente' };
+            return i;
+        });
+
         document.querySelectorAll('#ent-mes, #sai-mes').forEach(s => {
             meses.forEach((m, i) => s.innerHTML += `<option value="${i}">${m}</option>`);
         });
 
-        // Toggle do campo de mês
         function toggleMes(prefix) {
             const val = document.getElementById(`${prefix}-tipo`).value;
             document.getElementById(`${prefix}-mes-div`).style.display = (val === 'pontual') ? 'block' : 'none';
@@ -162,245 +141,130 @@
             renderAll();
         }
 
-        // --- LÓGICA DE LANÇAMENTOS ---
         function addEntry(type) {
             const prefix = type === 'entradas' ? 'ent' : 'sai';
             const desc = document.getElementById(`${prefix}-desc`).value;
             const val = parseFloat(document.getElementById(`${prefix}-val`).value);
             const tipo = document.getElementById(`${prefix}-tipo`).value;
             const mesSel = parseInt(document.getElementById(`${prefix}-mes`).value);
+            const ano = parseInt(document.getElementById('filtro-ano').value);
 
             if(desc && val) {
-                const targetList = type === 'entradas' ? state.entradas : state.despesas;
-                targetList.push({
-                    id: 'ID' + Date.now() + Math.floor(Math.random() * 1000), // ID único
-                    desc,
-                    val,
-                    tipo,
+                state[type === 'entradas' ? 'entradas' : 'despesas'].push({
+                    id: 'ID' + Date.now(), desc, val, tipo,
                     mesCriacao: tipo === 'recorrente' ? -1 : mesSel,
-                    anoCriacao: currentYear
+                    anoCriacao: ano
                 });
                 save();
-                // Limpar campos
                 document.getElementById(`${prefix}-desc`).value = '';
                 document.getElementById(`${prefix}-val`).value = '';
-            } else {
-                alert("Preencha descrição e valor corretamente.");
             }
         }
 
         function removeItem(type, id) {
-            if(confirm("Deseja excluir este item permanentemente?")) {
+            if(confirm("Excluir item?")) {
                 state[type] = state[type].filter(i => i.id !== id);
                 save();
             }
         }
 
-        // --- LÓGICA DE BAIXA INDIVIDUAL ---
         function toggleBaixa(id, mesIdx, ano) {
             const key = `${id}_${mesIdx}_${ano}`;
-            if(state.pagas[key]) {
-                delete state.pagas[key];
-            } else {
-                state.pagas[key] = true;
-            }
+            state.pagas[key] = !state.pagas[key];
             save();
-            openModal(mesIdx, window.currentModalType); // Recarrega o modal para ver a mudança
+            openModal(mesIdx, window.currentModalType);
         }
 
-        // --- MOTOR DE CÁLCULO ---
         function getValoresMes(mesIdx, ano) {
-            const dataAtual = new Date();
-            const mesAtualProg = dataAtual.getMonth(); // Abril = 3
-            const anoAtualProg = dataAtual.getFullYear();
-
-            const filtrar = (arr) => arr.filter(i => {
-                if(i.tipo === 'pontual') {
-                    return i.mesCriacao === mesIdx && i.anoCriacao === ano;
+            const filtrar = (list) => list.filter(i => {
+                if (i.tipo === 'pontual') return i.mesCriacao === mesIdx && i.anoCriacao === ano;
+                if (i.tipo === 'determinada') {
+                    const mesFim = i.inicio + i.parc;
+                    return mesIdx >= i.inicio && mesIdx < mesFim && i.ano === ano;
                 }
-                // Se recorrente: regra de Abril/2026
-                if(ano === anoAtualProg) {
-                    return mesIdx >= 3; 
-                }
-                return ano > anoAtualProg;
+                // Regra Abril/2026
+                if (ano === 2026) return mesIdx >= 3;
+                return ano > 2026;
             });
 
-            const entFiltradas = filtrar(state.entradas);
-            const saiFiltradas = filtrar(state.despesas);
-
-            const calcular = (lista) => {
-                return lista.reduce((acc, i) => {
-                    const isPago = state.pagas[`${i.id}_${mesIdx}_${ano}`];
-                    acc.prev += i.val;
-                    if(isPago) acc.real += i.val;
-                    return acc;
-                }, { prev: 0, real: 0, items: lista });
-            };
+            const calc = (lista) => lista.reduce((acc, i) => {
+                const valor = i.val || (i.total / i.parc);
+                acc.prev += valor;
+                if (state.pagas[`${i.id}_${mesIdx}_${ano}`]) acc.real += valor;
+                return acc;
+            }, { prev: 0, real: 0, items: lista });
 
             return {
-                entradas: calcular(entFiltradas),
-                saidas: calcular(saiFiltradas)
+                entradas: calc(filtrar(state.entradas)),
+                saidas: calc(filtrar(state.despesas))
             };
         }
 
-        // --- INTERFACE (DASHBOARD) ---
         function renderDashboard() {
+            const ano = parseInt(document.getElementById('filtro-ano').value);
             const tbody = document.getElementById('dashboard-body');
             tbody.innerHTML = '';
-            let totalRealEnt = 0;
-            let totalRealSai = 0;
-            let totalPrevPendente = 0;
+            let tEnt = 0, tSai = 0;
 
             meses.forEach((mes, i) => {
-                const dados = getValoresMes(i, currentYear);
-                const saldo = dados.entradas.real - dados.saidas.real;
-                
-                totalRealEnt += dados.entradas.real;
-                totalRealSai += dados.saidas.real;
-                totalPrevPendente += (dados.entradas.prev - dados.entradas.real);
+                const d = getValoresMes(i, ano);
+                const saldo = d.entradas.real - d.saidas.real;
+                tEnt += d.entradas.real; tSai += d.saidas.real;
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-l-4 ${saldo < 0 ? 'border-red-400' : 'border-blue-400'}">
-                        <td class="px-6 py-4 font-bold text-slate-700">${mes}</td>
-                        <td class="px-6 py-4 cursor-pointer hover:bg-green-50 transition group" onclick="openModal(${i}, 'entradas')">
-                            <div class="text-[10px] text-slate-400 italic">Prev: R$ ${dados.entradas.prev.toFixed(2)}</div>
-                            <div class="text-green-600 font-bold flex items-center gap-1">
-                                Real: R$ ${dados.entradas.real.toFixed(2)}
-                                <span class="opacity-0 group-hover:opacity-100 text-[8px] bg-green-100 px-1 rounded uppercase tracking-tighter">Ver/Baixa</span>
-                            </div>
+                    <tr>
+                        <td class="px-6 py-4 font-bold">${mes}</td>
+                        <td class="px-6 py-4 cursor-pointer hover:bg-green-50" onclick="openModal(${i}, 'entradas')">
+                            <div class="text-[10px] text-gray-400 italic">Prev: R$ ${d.entradas.prev.toFixed(2)}</div>
+                            <div class="text-green-600 font-bold underline underline-offset-4 decoration-dotted">Real: R$ ${d.entradas.real.toFixed(2)}</div>
                         </td>
-                        <td class="px-6 py-4 cursor-pointer hover:bg-red-50 transition group" onclick="openModal(${i}, 'saidas')">
-                            <div class="text-[10px] text-slate-400 italic">Prev: R$ ${dados.saidas.prev.toFixed(2)}</div>
-                            <div class="text-red-600 font-bold flex items-center gap-1">
-                                Real: R$ ${dados.saidas.real.toFixed(2)}
-                                <span class="opacity-0 group-hover:opacity-100 text-[8px] bg-red-100 px-1 rounded uppercase tracking-tighter">Ver/Baixa</span>
-                            </div>
+                        <td class="px-6 py-4 cursor-pointer hover:bg-red-50" onclick="openModal(${i}, 'saidas')">
+                            <div class="text-[10px] text-gray-400 italic">Prev: R$ ${d.saidas.prev.toFixed(2)}</div>
+                            <div class="text-red-600 font-bold underline underline-offset-4 decoration-dotted">Real: R$ ${d.saidas.real.toFixed(2)}</div>
                         </td>
-                        <td class="px-6 py-4 font-black text-lg ${saldo < 0 ? 'text-red-600' : 'text-blue-600'} bg-slate-50/50">
-                            R$ ${saldo.toFixed(2)}
-                        </td>
+                        <td class="px-6 py-4 font-black text-lg ${saldo < 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldo.toFixed(2)}</td>
                     </tr>`;
             });
-
-            // Cards de Resumo
-            const containerCards = document.getElementById('cards-resumo');
-            containerCards.innerHTML = `
-                <div class="bg-blue-600 p-6 rounded-2xl shadow-xl shadow-blue-100 text-white">
-                    <p class="text-[10px] uppercase font-bold tracking-widest opacity-70">Saldo Realizado Anual</p>
-                    <p class="text-3xl font-black italic">R$ ${(totalRealEnt - totalRealSai).toFixed(2)}</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Total Recebido (✅)</p>
-                    <p class="text-2xl font-bold text-green-600">R$ ${totalRealEnt.toFixed(2)}</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Total Pago (✅)</p>
-                    <p class="text-2xl font-bold text-red-600">R$ ${totalRealSai.toFixed(2)}</p>
-                </div>
-            `;
+            document.getElementById('cards-resumo').innerHTML = `
+                <div class="bg-blue-600 text-white p-6 rounded-xl shadow-lg"><p class="text-[10px] uppercase opacity-70">Saldo Realizado</p><p class="text-2xl font-black">R$ ${(tEnt-tSai).toFixed(2)}</p></div>
+                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-[10px] text-gray-400 uppercase font-bold">Total Recebido</p><p class="text-2xl font-bold text-green-600">R$ ${tEnt.toFixed(2)}</p></div>
+                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-[10px] text-gray-400 uppercase font-bold">Total Pago</p><p class="text-2xl font-bold text-red-600">R$ ${tSai.toFixed(2)}</p></div>`;
         }
 
-        // --- MODAL ---
         function openModal(mesIdx, type) {
             window.currentModalType = type;
+            const ano = parseInt(document.getElementById('filtro-ano').value);
             const modal = document.getElementById('modal');
-            const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
-            const header = document.getElementById('modal-header');
-            const footerSum = document.getElementById('modal-footer-sum');
+            const data = getValoresMes(mesIdx, ano)[type === 'entradas' ? 'entradas' : 'saidas'];
             
             modal.classList.remove('hidden');
-            header.className = `p-6 text-white font-bold flex justify-between items-center ${type === 'entradas' ? 'bg-green-600' : 'bg-red-600'}`;
-            title.innerText = `${type === 'entradas' ? '📥 Receitas' : '📤 Despesas'} - ${meses[mesIdx]}`;
-            
-            const dadosMes = getValoresMes(mesIdx, currentYear)[type];
-            footerSum.innerText = `Pago/Realizado: R$ ${dadosMes.real.toFixed(2)}`;
-            
-            body.innerHTML = dadosMes.items.map(i => {
-                const isPago = state.pagas[`${i.id}_${mesIdx}_${currentYear}`];
-                return `
-                    <div class="flex justify-between items-center p-4 rounded-xl border transition-all ${isPago ? 'bg-pago border-green-200' : 'bg-white border-slate-200'}">
-                        <div>
-                            <p class="font-black text-slate-700 text-xs uppercase leading-tight">${i.desc}</p>
-                            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">${i.tipo}</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="font-bold text-slate-700 text-sm">R$ ${i.val.toFixed(2)}</span>
-                            <button onclick="toggleBaixa('${i.id}', ${mesIdx}, ${currentYear})" class="text-3xl hover:scale-110 transition active:scale-95">
-                                ${isPago ? '✅' : '⬜'}
-                            </button>
-                        </div>
-                    </div>`;
-            }).join('') || '<div class="text-center py-10 text-slate-400 font-medium italic">Sem lançamentos para este mês.</div>';
+            document.getElementById('modal-header').className = `p-6 text-white font-bold flex justify-between ${type === 'entradas' ? 'bg-green-600' : 'bg-red-600'}`;
+            document.getElementById('modal-title').innerText = `${type === 'entradas' ? 'Receitas' : 'Despesas'} - ${meses[mesIdx]}`;
+            document.getElementById('modal-footer-sum').innerText = `Total: R$ ${data.real.toFixed(2)}`;
+
+            body.innerHTML = data.items.map(i => {
+                const isP = state.pagas[`${i.id}_${mesIdx}_${ano}`];
+                return `<div class="flex justify-between items-center p-4 rounded-xl border ${isP ? 'bg-pago' : 'bg-pendente'}">
+                    <div><p class="font-bold text-xs uppercase">${i.desc}</p></div>
+                    <div class="flex items-center gap-4"><span class="font-bold text-sm">R$ ${(i.val || i.total/i.parc).toFixed(2)}</span>
+                    <button onclick="toggleBaixa('${i.id}', ${mesIdx}, ${ano})" class="text-2xl">${isP ? '✅' : '⬜'}</button></div>
+                </div>`;
+            }).join('') || '<p class="text-center text-gray-400 py-4 italic">Nenhum lançamento.</p>';
         }
 
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
-
-        // --- LISTAGEM DE CONFIGURAÇÃO ---
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); renderAll(); }
         function renderLists() {
-            const render = (type) => {
-                const list = document.getElementById(`list-${type === 'entradas' ? 'entradas' : 'despesas'}`);
-                list.innerHTML = state[type].filter(i => i.anoCriacao === currentYear || i.tipo === 'recorrente').map(i => `
-                    <li class="flex justify-between items-center bg-slate-50 p-3 border rounded-xl hover:border-slate-300 transition group">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-slate-700 uppercase">${i.desc}</span>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter italic">${i.tipo === 'recorrente' ? 'Mensal' : meses[i.mesCriacao]}</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-bold text-slate-800 text-sm italic">R$ ${i.val.toFixed(2)}</span>
-                            <button onclick="removeItem('${type}', '${i.id}')" class="text-red-300 hover:text-red-500 font-black text-lg transition opacity-0 group-hover:opacity-100">×</button>
-                        </div>
-                    </li>`).join('');
+            const ano = parseInt(document.getElementById('filtro-ano').value);
+            const r = (type) => {
+                document.getElementById(`list-${type === 'entradas' ? 'entradas' : 'despesas'}`).innerHTML = state[type === 'entradas' ? 'entradas' : 'despesas']
+                    .filter(i => i.anoCriacao === ano || i.tipo === 'recorrente' || i.ano === ano)
+                    .map(i => `<li class="flex justify-between items-center bg-white p-2 border rounded text-xs"><span>${i.desc}</span><button onclick="removeItem('${type === 'entradas' ? 'entradas' : 'despesas'}', '${i.id}')" class="text-red-400 font-bold px-2">×</button></li>`).join('');
             };
-            render('entradas'); 
-            render('despesas');
+            r('entradas'); r('despesas');
         }
-
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'dashboard') renderDashboard();
-        }
-
-        function changeYear() {
-            currentYear = parseInt(document.getElementById('filtro-ano').value);
-            renderAll();
-        }
-
-        function resetData() {
-            if(confirm("ATENÇÃO: Isso apagará TODOS os dados salvos. Deseja continuar?")) {
-                localStorage.removeItem('financas_pro_360_v3');
-                location.reload();
-            }
-        }
-
-        // --- EXCEL ---
-        function exportToExcel() {
-            const wsData = meses.map((m, i) => {
-                const d = getValoresMes(i, currentYear);
-                return {
-                    "Mês": m,
-                    "Ano": currentYear,
-                    "Entrada Real (✅)": d.entradas.real,
-                    "Saída Real (✅)": d.saidas.real,
-                    "Saldo Real": d.entradas.real - d.saidas.real,
-                    "Total Previsto": d.entradas.prev - d.saidas.prev
-                };
-            });
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
-            XLSX.writeFile(wb, `Planilha_Financeira_${currentYear}.xlsx`);
-        }
-
-        function renderAll() { 
-            renderLists(); 
-            renderDashboard(); 
-        }
-
-        // Inicialização
+        function renderAll() { renderLists(); renderDashboard(); }
         renderAll();
     </script>
 </body>
